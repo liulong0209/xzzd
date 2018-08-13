@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wlt.xzzd.dao.SchoolTopicMapper">
+	
+	<!-- 增加话题 -->
+	<insert id="addTopic" parameterType="SchoolTopic">
+		<selectKey keyProperty="id" order="AFTER" resultType="Integer">
+	      	SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into tbl_school_topic
+		(
+			school_id,
+			author,
+			title,
+			content,
+			mark,
+			top_grade,
+			field,
+			publish_time
+		)
+		value
+		(
+			#{schoolId},
+			#{authorOpenId},
+			#{title},
+			#{content},
+			0,
+			1,
+			#{field},
+			now()
+		)
+	</insert>
+	
+	<!-- 根据学校ID查询学校话题 -->
+	<select id="queryTopicBySchoolId" parameterType="Map" resultType="SchoolTopic">
+		select 
+			a.id as id,
+			a.school_id as schoolId,
+			a.author as authorOpenId,
+			c.NICKNAME as authorNickname,
+			c.AVATARURL as authorAvatarUrl,
+			a.title as title,
+			a.content as content,
+			a.mark as mark,
+			a.top_grade as topGrade,
+			a.publish_time as publishTime,
+			date_format(a.publish_time,  '%Y-%m-%d %H:%i:%s') as publishTimeStr
+		FROM
+		tbl_school_topic a
+		left join tbl_school_info b on b.id=a.school_id
+		left join member c on a.author=c.OPENID
+		where mark=0 and a.school_id=#{schoolId} and a.field=#{field}
+		order by publish_time desc, top_grade asc
+		LIMIT #{startRow}, #{pageSize}
+	</select>
+	
+	<!-- 查询学校话题数量 -->
+	<select id="queryTopicNum" parameterType="Integer" resultType="Integer">
+		SELECT
+			count(a.id)
+		FROM
+		tbl_school_topic a
+		left join tbl_school_info b on b.id=a.school_id 
+		where a.school_id=#{schoolId}
+	</select>
+	
+	<!-- 查询话题详情 -->
+	<select id="queryTopicDetail" parameterType="Integer" resultType="SchoolTopic">
+		select 
+			a.id as id,
+			a.school_id as schoolId,
+			a.author as authorOpenId,
+			c.NICKNAME as authorNickname,
+			c.AVATARURL as authorAvatarUrl,
+			a.title as title,
+			a.content as content,
+			a.mark as mark,
+			a.top_grade as topGrade,
+			a.publish_time as publishTime,
+			date_format(a.publish_time,  '%Y-%m-%d %H:%i:%s') as publishTimeStr
+		FROM
+		tbl_school_topic a
+		left join tbl_school_info b on b.id=a.school_id
+		left join member c on a.author=c.OPENID
+		where mark=0 and a.id=#{topicId}
+	</select>
+</mapper>
+
+

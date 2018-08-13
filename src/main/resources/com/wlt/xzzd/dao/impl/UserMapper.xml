@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wlt.xzzd.dao.UserMapper">
+	<!-- 增加用户数据 -->
+	<insert id="addUser" parameterType="UserInfo">
+	<selectKey keyProperty="id" order="AFTER" resultType="Integer">
+	      	SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into member 
+		(
+			OPENID,
+			NICKNAME,
+			AVATARURL,
+			GENDER,
+			COUNTRY,
+			PROVINCE,
+			CITY,
+			CREATE_DATE
+		) 
+		value
+		(
+			#{openId},
+			#{nickName},
+			#{avatarUrl},
+			#{gender},
+			#{country},
+			#{province},
+			#{city},
+			now()
+		)
+	</insert>
+	
+	<!-- 标记删除用户学校数据 -->
+	<update id="updateUser" parameterType="UserInfo">
+		update member 
+		set UPDATE_DATE=now()
+			<if test="nickName!=null and nickName!=''">
+				,NICKNAME=#{nickName}
+			</if>
+			<if test="avatarUrl!=null and avatarUrl!=''">
+				,AVATARURL=#{avatarUrl}
+			</if>
+			<if test="gender!=null">
+				,GENDER=#{gender}
+			</if>
+			<if test="country!=null and country!=''">
+				,COUNTRY=#{country}
+			</if>
+			<if test="province!=null and province!=''">
+				,PROVINCE=#{province}
+			</if>
+			<if test="city!=null and city!=''">
+				,CITY=#{city}
+			</if>
+
+		where OPENID=#{openId}
+	</update>
+	
+	
+	<!-- 根据opendid查询用户 -->
+	<select id="queryUser" parameterType="String" resultType="UserInfo">
+		SELECT
+			MBR_ID as id,
+			OPENID as openId,
+			NICKNAME as nickName,
+			AVATARURL as avatarUrl,
+			GENDER as gender,
+			COUNTRY as country,
+			PROVINCE as province,
+			CITY as city,
+			CREATE_DATE as createTime
+		FROM member 
+		where OPENID=#{openId}
+	</select>
+	
+</mapper>
+
+

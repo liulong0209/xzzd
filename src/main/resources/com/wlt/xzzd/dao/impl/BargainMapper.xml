@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wlt.xzzd.dao.BargainMapper">
+	<!-- 查询砍价列表 -->
+	<select id="queryBargainList" parameterType="Map" resultType="BargainInfo">
+		SELECT 
+			a.regist_id as bargainId,
+			c.PROD_ID as productId,
+			c.name as productName,
+			d.FILE_PATH as productImg,
+			(b.cut_money_first+b.cut_money_second) as beCutMoney
+		from tbl_bargain_registration a
+		LEFT JOIN tbl_bargain_activity b on b.act_id=a.act_id
+		LEFT JOIN product c on c.PROD_ID =b.prod_id
+		LEFT JOIN prod_atts d on d.PROD_ID=c.PROD_ID
+		where a.owner =#{openId}
+	</select>
+	
+	<!-- 查询砍价记录 -->
+	<select id="queryBargainRecord" parameterType="Integer" resultType="BargainRecord">
+		select 
+			b.NICKNAME as nickName,
+			b.AVATARURL as avatarUrl,
+			c.becat_money as cutMoney
+		from tbl_bargain_record a
+		LEFT JOIN member b on b.OPENID=a.cuter_openid
+		LEFT JOIN tbl_bargain_divide c on c.id=a.divide_id
+		LEFT JOIN tbl_bargain_registration d on d.regist_id =c.regist_id
+		where d.regist_id=#{bargainId}
+	</select>
+	
+	<!-- 已砍总钱数 -->
+	<select id="queryCutedMoney" parameterType="Integer" resultType="Double">
+		select 
+			COALESCE(SUM(b.becat_money),0)
+		from tbl_bargain_record a
+		LEFT JOIN tbl_bargain_divide b on b.id=a.divide_id
+		LEFT JOIN tbl_bargain_registration c on c.regist_id =b.regist_id
+		where c.regist_id=#{bargainId}
+	</select>
+</mapper>
+
+

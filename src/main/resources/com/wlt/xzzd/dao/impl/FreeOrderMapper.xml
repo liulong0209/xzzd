@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wlt.xzzd.dao.FreeOrderMapper">
+	
+	<!-- 查询我发起的免单 -->
+	<select id="queryOwnerFreeOrders" parameterType="Map" resultType="FreeOrder">
+		select 
+			a.order_no as orderNo,
+			a.parent_order_no as parentOrderNo,
+			a.user_openid as openId,
+			c.PROD_ID as productId,
+			c.NAME as productName,
+			c.CURRENT as productCurrentPrice,
+			d.FILE_PATH as productImg,
+			a.pay_money as payMoney,
+			a.pay_time as payTime,
+			a.type as type,
+			a.refund_flag as refundFlag,
+			a.state as state,
+			DATE_ADD(a.pay_time,INTERVAL e.valid_days DAY) as actEndTime
+		from tbl_free_orders a
+		LEFT JOIN product c on c.PROD_ID=a.product_id
+		LEFT JOIN prod_atts d ON d.PROD_ID=c.PROD_ID
+		LEFT JOIN tbl_free_rule e ON e.id=d.RULE_ID
+		where a.user_openid=#{openId}
+		and a.type=0
+		and state>0
+		order by a.pay_time
+		<!--LIMIT #{startRow}, #{pageSize}  -->
+	</select>
+	
+	<!-- 查询我参与的免单 -->
+	<select id="queryJoinFreeOrders" parameterType="Map" resultType="FreeOrder">
+		select 
+			a.order_no as orderNo,
+			a.parent_order_no as parentOrderNo,
+			a.user_openid as openId,
+			c.PROD_ID as productId,
+			c.NAME as productName,
+			c.CURRENT as productCurrentPrice,
+			d.FILE_PATH as productImg,
+			a.pay_money as payMoney,
+			a.pay_time as payTime,
+			a.type as type,
+			a.refund_flag as refundFlag,
+			a.state as state,
+			DATE_ADD(a.pay_time,INTERVAL e.valid_days DAY) as actEndTime
+		from tbl_free_orders a
+		LEFT JOIN product c on c.PROD_ID=a.product_id
+		LEFT JOIN prod_atts d ON d.PROD_ID=c.PROD_ID
+		LEFT JOIN tbl_free_rule e ON e.id=d.RULE_ID
+		where a.user_openid=#{openId}
+		and a.type=1
+		and state>0
+		order by a.pay_time
+		<!--LIMIT #{startRow}, #{pageSize}  -->
+	</select>
+	
+	<!-- 统计免单参与人数 -->
+	<select id="countJoinedNum" parameterType="String" resultType="Integer">
+		select count(order_no) from tbl_free_orders where (order_no=#{orderNo} or parent_order_no=#{orderNo}) and state>0
+	</select>
+	
+	<!-- 根据订单编号查询订单 -->
+	<select id="queryFreeOrderByOrderNo" parameterType="String" resultType="FreeOrder">
+		select 
+			a.order_no as orderNo,
+			a.parent_order_no as parentOrderNo,
+			b.OPENID as openId,
+			b.NICKNAME as nickame,
+			b.AVATARURL as avatarUrl,
+			c.PROD_ID as productId,
+			c.NAME as productName,
+			c.CURRENT as productCurrentPrice,
+			d.FILE_PATH as productImg,
+			a.pay_money as payMoney,
+			a.pay_time as payTime,
+			a.type as type,
+			a.refund_flag as refundFlag,
+			a.state as state,
+			e.join_num as needjoinNum,
+			DATE_ADD(a.pay_time,INTERVAL e.valid_days DAY) as actEndTime
+		from tbl_free_orders a
+		LEFT JOIN member b ON b.OPENID=a.user_openid
+		LEFT JOIN product c on c.PROD_ID=a.product_id
+		LEFT JOIN prod_atts d ON d.PROD_ID=c.PROD_ID
+		LEFT JOIN tbl_free_rule e ON e.id=d.RULE_ID
+		where a.order_no=#{orderNo}
+	</select>
+	
+	<!-- 查询订单参与者 -->
+	<select id="queryJoinMembers" parameterType="String" resultType="FreeOrderJoinMember">
+		select
+			a.order_no as orderNo,
+			a.parent_order_no as parentOrderNo,
+			a.type as identity,
+			a.pay_money as payMoney,
+			b.OPENID as openId,
+			b.NICKNAME as nickame,
+			b.AVATARURL as avatarUrl
+		from tbl_free_orders a
+		LEFT JOIN member b ON b.OPENID=a.user_openid
+		where (a.order_no=#{orderNo} or a.parent_order_no=#{orderNo}) and a.state>0
+		order by a.type
+	</select>
+	
+	<!-- 生成订单 -->
+	<insert id="createFreeOrder" parameterType="FreeOrder">
+		insert into tbl_free_orders
+		(
+			order_no,
+			parent_order_no,
+			user_openid,
+			product_id,
+			pay_money,
+			type,
+			refund_flag,
+			state,
+			create_time
+		)
+		value
+		(
+			#{orderNo},
+			#{parentOrderNo},
+			#{openId},
+			#{productId},
+			#{payMoney},
+			#{type},
+			1,
+			0,
+			now()
+		)
+	</insert>
+	
+	<!-- 修改订单状态 -->
+	<update id="updateFreeOrder" parameterType="FreeOrder">
+		update tbl_free_orders
+		set update_time=now()
+		<if test="payTime!=null">
+			,pay_time=#{payTime}
+		</if>
+		<if test="state!=null and state!=0">
+			,state=#{state}
+		</if>
+		<if test="weixinOrderNo!=null and weixinOrderNo!=''">
+			,weixin_order_no=#{weixinOrderNo}
+		</if>
+		<if test="refundFlag!=null">
+			,refund_flag=#{refundFlag}
+		</if>
+		<if test="result!=null">
+			,result=#{result}
+		</if>
+		where order_no=#{orderNo}
+	</update>
+	
+	<!--  -->
+	<select id="queryUnFinishTopOrder" resultType="FreeOrder">
+		select 
+			a.order_no as orderNo,
+			a.parent_order_no as parentOrderNo,
+			a.user_openid as openId,
+			a.pay_money as payMoney,
+			a.pay_time as payTime,
+			a.type as type,
+			a.refund_flag as refundFlag,
+			a.state as state,
+			a.result as result,
+			e.join_num as needjoinNum,
+			DATE_ADD(a.pay_time,INTERVAL e.valid_days DAY) as actEndTime 
+		from tbl_free_orders a
+		LEFT JOIN product c on c.PROD_ID=a.product_id
+		LEFT JOIN prod_atts d ON d.PROD_ID=c.PROD_ID
+		LEFT JOIN tbl_free_rule e ON e.id=d.RULE_ID
+		where a.type=0 and a.state=1
+	</select>
+</mapper>

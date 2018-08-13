@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wlt.xzzd.dao.DialPhoneRecordMapper">
+	
+	<!-- 增加记录 -->
+	<insert id="recordDailPhone" parameterType="DialPhoneRecord">
+		<selectKey keyProperty="id" order="AFTER" resultType="Integer">
+	      	SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into tbl_dialPhone_record
+		(
+			userName,
+			phoneNumber,
+			shopid,
+			dial_time
+		)
+		value
+		(
+			#{userName},
+			#{phoneNumber},
+			#{shopId},
+			now()
+		)
+	</insert>
+</mapper>
+
+

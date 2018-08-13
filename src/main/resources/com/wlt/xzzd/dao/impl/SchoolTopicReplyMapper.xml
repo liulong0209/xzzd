@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wlt.xzzd.dao.SchoolTopicReplyMapper">
+	<!-- 统计学校话题回复数量 -->
+	<select id="countReplyNum" parameterType="Integer" resultType="Integer">
+		SELECT 
+			COUNT(a.id) 
+		from tbl_school_topic_reply a 
+		LEFT JOIN tbl_school_topic b on b.id=a.topic_id 
+		where 
+		a.mark=0 
+		and b.mark=0 
+		and a.topic_id=#{topicId}
+	</select>
+	
+	<!-- 查询话题回复 -->
+	<select id="queryReply" parameterType="Map" resultType="SchoolTopicReply">
+		SELECT 
+			a.id as id,
+			a.topic_id as topicId,
+			a.author as authorOpenId,
+			b.NICKNAME as authorNickname,
+			b.AVATARURL as authorAvatarUrl,
+			a.origin as originOpenId,
+			c.NICKNAME as originNickname,
+			c.AVATARURL as originAvatarUrl,
+			a.origin as originOpenId,
+			a.content as content,
+			a.top_grade as topGrade,
+			a.reply_time as replyTime,
+			date_format(a.reply_time,  '%Y-%m-%d %H:%i:%s') as replyTimeStr
+		from tbl_school_topic_reply a 
+		left join member b on a.author=b.OPENID
+	    left join member c on a.origin=c.OPENID
+		LEFT JOIN tbl_school_topic d on d.id=a.topic_id 
+		where 
+		a.mark=0 
+		and d.mark=0 
+		and a.topic_id=#{topicId}
+		order by a.reply_time desc, a.top_grade asc
+		LIMIT #{startRow}, #{pageSize}
+	</select>
+	
+	<!-- 话题回复 -->
+	<insert id="reply" parameterType="SchoolTopicReply">
+		<selectKey keyProperty="id" order="AFTER" resultType="Integer">
+	      	SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into tbl_school_topic_reply
+		(
+			topic_id,
+			author,
+			origin,
+			content,
+			top_grade,
+			mark,
+			reply_time
+		)
+		value
+		(
+			#{topicId},
+			#{authorOpenId},
+			#{originOpenId},
+			#{content},
+			0,
+			0,
+			now()
+		)
+	</insert>
+	
+	<!-- 根据id查询回复详情 -->
+	<select id="queryReplyById" parameterType="Integer" resultType="SchoolTopicReply">
+		SELECT 
+			a.id as id,
+			a.topic_id as topicId,
+			a.author as authorOpenId,
+			b.NICKNAME as authorNickname,
+			b.AVATARURL as authorAvatarUrl,
+			a.origin as originOpenId,
+			c.NICKNAME as originNickname,
+			c.AVATARURL as originAvatarUrl,
+			a.content as content,
+			a.top_grade as topGrade,
+			a.reply_time as replyTime,
+			date_format(a.reply_time,  '%Y-%m-%d %H:%i:%s') as replyTimeStr
+		from tbl_school_topic_reply a
+		left join member b on a.author=b.OPENID
+	    left join member c on a.origin=c.OPENID
+		where id=#{id}
+	</select>
+</mapper>
+
+

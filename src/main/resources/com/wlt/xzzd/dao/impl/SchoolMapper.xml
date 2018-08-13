@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wlt.xzzd.dao.SchoolMapper">
+	<!-- 根据学校id查询学校 -->
+	<select id="querySchoolById" parameterType="Integer" resultType="School">
+		SELECT
+		id as id,
+		school_name as name,
+		alias as alias,
+		school_code as code,
+		initial as initial,
+		create_time as createTime,
+		update_time as updateTime
+		FROM
+		tbl_school_info 
+		where id=#{id}
+	</select>
+	
+	
+	<!-- 查询所有学校 -->
+	<select id="querySchool" resultType="School">
+		SELECT
+		id as id,
+		school_name as name,
+		alias as alias,
+		school_code as code,
+		initial as initial,
+		create_time as createTime,
+		update_time as updateTime
+		FROM
+		tbl_school_info 
+		order by initial
+	</select>
+	
+	<!-- 根据用户选择情况，查询人数最多的前6名学校 -->
+	<select id="queryHotSchool" resultType="School">
+		select 
+		  count(a.id) as num,
+		  b.id as id,
+		  b.school_name as name,
+		  b.alias as alias,
+		  b.school_code as code,
+		  b.initial as initial,
+		  b.create_time as createTime,
+		  b.update_time as updateTime
+		from tbl_user_school a 
+		LEFT JOIN tbl_school_info b on b.id=a.school_id
+		GROUP BY a.school_id
+		ORDER BY num DESC, b.id ASC
+		LIMIT 6
+	</select>
+	
+	<!-- 查询用户是绑定过该学校 -->
+	<select id="queryUserSchool" resultType="UserSchool">
+		select 
+		    id as id,
+			school_id as schoolId,
+			user_openid as userOpenId,
+			state,
+			create_time as createTime,
+			update_time as updateTime
+		from tbl_user_school
+		where 
+		1=1 
+		<if test="null!=schoolId and 0!=schoolId">
+			and school_id=#{schoolId}		
+		</if>
+		<if test="null!=userOpenId and '' != userOpenId">
+			and user_openid=#{userOpenId}
+		</if>
+		<if test="null!=state">
+			and state=#{state}
+		</if>
+	</select>
+	
+	<!-- 增加用户学校数据 -->
+	<insert id="addUserSchool" parameterType="UserSchool">
+		insert into tbl_user_school 
+		(
+			school_id,
+			user_openid,
+			state,
+			create_time
+		) 
+		value
+		(
+			#{schoolId},
+			#{userOpenId},
+			0,
+			now()
+		)
+	</insert>
+	
+	<!-- 标记删除用户学校数据 -->
+	<update id="markdelUserSchool" parameterType="UserSchool">
+		update tbl_user_school 
+		set state=1, update_time=now()
+		where user_openid=#{userOpenId}
+	</update>
+	
+	<!-- 恢复绑定 -->
+	<update id="recoverUserSchool" parameterType="UserSchool">
+		update tbl_user_school 
+		set state=0, update_time=now()
+		where school_id=#{schoolId} and user_openid=#{userOpenId}
+	</update>
+	
+	<!-- 查询学校成员数量 -->
+	<select id="querySchoolMemberNum" parameterType="Integer" resultType="Integer">
+		select count(id) from tbl_user_school where state=0 and school_id=#{schoolId}
+	</select>
+</mapper>
+
+

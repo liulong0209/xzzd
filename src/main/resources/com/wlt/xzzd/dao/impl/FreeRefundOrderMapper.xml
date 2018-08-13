@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wlt.xzzd.dao.FreeRefundOrderMapper">
+	<!-- 生成订单 -->
+	<insert id="addOrder" parameterType="FreeRefundOrder">
+		insert into tbl_free_refund_orders
+		(
+			refund_order_no,
+			refund_id,
+			origin_order_no,
+			refund_fee,
+			result,
+			error_code,
+			error_code_des,
+			create_time
+		)
+		value
+		(
+			#{refundOrderNo},
+			#{refundId},
+			#{originOrderNo},
+			#{refundFee},
+			#{result},
+			#{errorCode},
+			#{errorCodeDes},
+			now()
+		)
+	</insert>
+	
+	<!-- 修改订单状态 -->
+	<update id="updateOrder" parameterType="FreeRefundOrder">
+		update tbl_free_refund_orders
+		set update_time=now()
+<!-- 		<if test="">
+			
+		</if> -->
+		
+		where refund_order_no=#{refundOrderNo}
+	</update>
+</mapper>
